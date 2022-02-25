@@ -1,6 +1,6 @@
 # Owie
 
-[![Gitpod Ready-to-Code](https://img.shields.io/badge/Gitpod-Ready--to--Code-blue?logo=gitpod)](https://gitpod.io/#https://github.com/lolwheel/Owie)
+[![Gitpod Ready-to-Code](https://img.shields.io/badge/Gitpod-Ready--to--Code-blue?logo=gitpod)](https://gitpod.io/#https://github.com/markoblaster/Owie)
 
 This project is inspired by the JWFFM modchip and aims to unlock battery expansion possibilities on otherwise
 locked Onewheels such as Onewheel XR with FW version 4210+
