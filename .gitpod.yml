@@ -1,3 +1,7 @@
+vscode:
+  extensions:
+    - vscode.cpp
+
 tasks:
   - before: platformio upgrade
   - init: platformio test -e native

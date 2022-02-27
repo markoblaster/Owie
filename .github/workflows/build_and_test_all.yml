@@ -1,5 +1,5 @@
 name: Build and test everything
-on: [push, pull_request]
+on: [push]
 jobs:
   build_and_test:
     runs-on: ubuntu-latest
@@ -18,10 +18,11 @@ jobs:
         path: ~/.platformio
         key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
     - name: Set up Python
-      run:  python -m pip install --upgrade pip
       uses: actions/setup-python@v2
     - name: Install PlatformIO
-      run: pip install --upgrade platformio
+      run: |
+        python -m pip install --upgrade pip
+        pip install --upgrade platformio
     - name: Install library dependencies
       run: pio lib -g install 1
     - name: Build Owie
