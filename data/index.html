@@ -177,6 +177,11 @@
         }
         window.addEventListener('DOMContentLoaded', rescanContent);
     </script>
+    <script>
+		var timer = setTimeout(function () {
+    location.reload()
+}, 3000);
+	</script>
 </head>
 
 <body>
@@ -241,6 +246,9 @@
         >
           Unlock Board
         </button>
+        <p></p>
+        <button onclick="clearTimeout(timer);">Live Feed Off</button><p></p><button onclick="setTimeout(function () {
+location.reload()}, 3000);">Live Feed On</button>
       </div>
       <div style="text-align: right; font-size: 11px">
         <hr />
