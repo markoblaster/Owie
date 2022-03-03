@@ -66,6 +66,12 @@ String templateProcessor(const String &var) {
     return String(Settings->graceful_shutdown_count);
   } else if (var == "UPTIME") {
     return uptimeString();
+  } else if (var == "LOCK_STATUS") {
+    return Settings->board_locked ? "locked" : "unlocked";
+  } else if (var == "BOARD_LOCK_ARMED") {
+    return Settings->board_lock_armed ? "arm" : "disarm";
+  } else if (var == "BOARD_LOCK_ARMED_INV") {
+    return Settings->board_lock_armed ? "Disarm" : "Arm";
   } else if (var == "CELL_VOLTAGE_TABLE") {
     const uint16_t *cellMillivolts = relay->getCellMillivolts();
     String out;
@@ -195,6 +201,25 @@ void setupWebServer(BmsRelay *bmsRelay) {
                    sizeof(Settings->ap_self_password));
       saveSettingsAndRestartSoon();
       request->send(200, "text/html", "Settings saved, restarting...");
+      return;
+    }
+    request->send(404);
+  });
+  webServer.on("/lock", HTTP_GET, [](AsyncWebServerRequest *request) {
+    if (request->hasParam("unlock")) {
+      Settings->board_locked = false; // unlock the board
+      saveSettingsAndRestartSoon();
+      request->send(
+          200, "text/html",
+          "Board unlocked, restarting Owie. Please wait a few seconds "
+          "and reboot your board.");
+      return;
+    } else if (request->hasParam("toggleArm")) {
+      Settings->board_lock_armed = !Settings->board_lock_armed;
+      Settings->board_locked = false; // unlock the board
+      String retval = Settings->board_lock_armed ? "Disarm" : "Arm";
+      saveSettingsAndRestartSoon();
+      request->send(200, "text/html", retval);
       return;
     }
     request->send(404);
