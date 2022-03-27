@@ -19,7 +19,7 @@ inline int16_t int16FromNetworkOrder(const void* const p) {
 
 int openCircuitSocFromVoltage(float voltageVolts) {
   // kindly provided by biell@ in https://github.com/lolwheel/Owie/issues/1
-  return clamp((int)(99.9 / (0.8 + pow(1.29, (54 - voltageVolts))) - 10), 1,
+  return clamp((int)(99.9 / (0.8 + pow(1.29, (54 - voltageVolts))) - 10), 0,
                100);
 }
 
@@ -36,17 +36,16 @@ void BmsRelay::batteryPercentageParser(Packet& p) {
     p.setShouldForward(false);
     return;
   }
-  overridden_soc_percent_ = std::max(
-      5,
-      openCircuitSocFromVoltage(filtered_total_voltage_millivolts_ / 1000.0));
-  p.data()[0] = std::max(5, (int)overridden_soc_percent_);
+  overridden_soc_percent_ =
+      openCircuitSocFromVoltage(filtered_total_voltage_millivolts_ / 1000.0);
+  p.data()[0] = overridden_soc_percent_;
 }
 
 void BmsRelay::currentParser(Packet& p) {
   if (p.getType() != 5) {
     return;
   }
-  p.setShouldForward(false);
+  p.setShouldForward(isCharging());
 
   // 0x5 message encodes current as signed int16.
   // The scaling factor (tested on a Pint) seems to be 0.055
@@ -137,22 +136,14 @@ void BmsRelay::powerOffParser(Packet& p) {
   }
 }
 
-void BmsRelay::chargingStatusParser(Packet& p) {
+void BmsRelay::bmsStatusParser(Packet& p) {
   if (p.getType() != 0) {
     return;
   }
-  int8_t status = p.data()[0];
-  // This one bit seems to indicate charging, block every other message.
-  // Otherwise my Pint 5059 throws Error 23.
-  if ((status & 0x20) == 0) {
-    p.setShouldForward(false);
-  }
-  // Interesting observation is that if I swallow chargin packets too, the board
-  // assumes riding state even with the charger plugged in. This is potentially
-  // enabling Charge-n-Ride setups though I haven't tested this(and have no
-  // plans to). It's likely that the BMS will shut down when regen
-  // current exceeds the charging current limit, at least on
-  // Pints. This will be a very interesting experiment to run on XRs where the
-  // BMS charging port isn't utilised and the charging current probably goes
-  // through the main HV bus from the controller board.
+  last_status_byte_ = p.data()[0];
+
+  // Forwarding the status packet during normal operation seems to drive
+  // an event loop in the controller that tallies used Ah and eventually
+  // makes the board throw Error 23. Swallowing the packet does the trick.
+  p.setShouldForward(isCharging() || isBatteryEmpty());
 }
